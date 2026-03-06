@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canopix - Website</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Poppins:200,300,400,500,600,700,800,900&display=swap">
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v6.5.1/css/all.css">
+    <style>
+    /* --- CSS VARIABLES --- */
+    :root {
+        --primary: rgba(147, 93, 31, 0.781);
+        --secondary: #e09524;
+        --dark-bg: #0b0c10;
+        --light-bg: #0b0c10;
+        --text-light: #c5c6c7;
+        --white: #ffffff;
+        --gold: #c5b86b;
+        --brown: #0b0c10;
+        --separator: #2b1d0e; 
+    }
+
+    /* --- GLOBAL RESET --- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+        font-family: 'Poppins', sans-serif; 
+        background-color: var(--dark-bg); 
+        color: var(--text-light); 
+        overflow-x: hidden; 
+        scroll-behavior: smooth;
+    }
+
+    /* --- ANIMATIONS --- */
+    @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(50px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .reveal-item { opacity: 0; }
+    .reveal-item.animated { animation: fadeInUp 0.8s ease forwards; }
+
+    /* --- PROFILE PICTURE STYLES --- */
+    .profile-img-nav {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 1.5px solid var(--gold);
+        background: #23242a;
+    }
+    .settings-pic-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .settings-profile-preview {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        border: 3px solid var(--primary);
+        object-fit: cover;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: 0.3s;
+        background: #23242a;
+    }
+    .settings-profile-preview:hover { transform: scale(1.05); filter: brightness(1.2); }
+    #upload-profile-pic { display: none; }
+
+    /* --- DETAIL PAGES --- */
+    .value-page {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: var(--dark-bg); z-index: 5000;
+        display: none; 
+        flex-direction: column;
+        padding: 80px 10%;
+        overflow-y: auto;
+        animation: slideIn 0.5s ease;
+    }
+    @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    .page-header { display: flex; align-items: center; gap: 20px; margin-bottom: 40px; border-bottom: 2px solid var(--primary); padding-bottom: 20px; }
+    .btn-back { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; display: flex; align-items: center; gap: 10px; font-weight: bold; }
+    .page-content { line-height: 1.8; color: var(--white); }
+    .page-content h2 { text-align: left; margin-bottom: 20px; color: var(--gold); }
+    .resource-box { background: var(--light-bg); padding: 20px; border-radius: 10px; margin-top: 30px; border-left: 5px solid var(--primary); }
+
+    /* --- AUTH & SETTINGS OVERLAYS --- */
+    #animated-login-wrapper, #settings-overlay {
+        position: fixed; inset: 0; 
+        background: rgba(0,0,0,0.85); 
+        display: none; justify-content: center; align-items: center; z-index: 10000;
+        backdrop-filter: blur(5px);
+    }
+    .box {
+        position: relative; width: 90%; max-width: 420px; height: 380px;
+        background: #1a1a24; border-radius: 20px;
+        display: flex; justify-content: center; align-items: center;
+        transition: 0.5s ease-in-out; overflow: hidden;
+        box-shadow: 0 15px 50px #000;
+    }
+    .box.signup-mode, .box.settings-mode { height: 620px; }
+    .box::before, .box::after {
+        content: ""; position: absolute; width: 150%; height: 300%;
+        background: conic-gradient(transparent, var(--primary), transparent 60%);
+        filter: blur(20px); animation: rotate-border 4s linear infinite;
+    }
+    .box::after { background: conic-gradient(transparent, var(--gold), transparent 60%); animation-delay: -2s; }
+    @keyframes rotate-border { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .inner-content { position: absolute; inset: 4px; background: #23242a; border-radius: 16px; z-index: 10; }
+    .loginBx { position: relative; z-index: 20; width: 85%; display: flex; flex-direction: column; gap: 12px; text-align: center; }
+    .loginBx h2 { font-size: 1.5rem; letter-spacing: 2px; color: #fff; margin-bottom: 5px; }
+    .input-group { position: relative; width: 100%; }
+    .loginBx input, .custom-select {
+        width: 100%; padding: 12px 15px; border-radius: 25px; border: 1px solid rgba(255,255,255,0.2);
+        background: rgba(255,255,255,0.05); color: #fff; outline: none; font-size: 0.9rem;
+    }
+    .custom-select option { background: #1a1a24; color: #fff; }
+    .toggle-pass { position: absolute; right: 18px; top: 50%; transform: translateY(-50%); cursor: pointer; color: var(--primary); font-size: 1.1rem; z-index: 100; }
+    .signup-only { display: none; }
+    .loginBx input[type="submit"], .btn-action {
+        background: var(--primary); color: #000; font-weight: bold; border: none; cursor: pointer; margin-top: 10px; transition: 0.3s;
+        width: 100%; padding: 12px; border-radius: 25px;
+    }
+    .loginBx input[type="submit"]:hover, .btn-action:hover { background: var(--white); transform: scale(1.02); }
+    .group-links { display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.8rem; }
+    .group-links a { color: var(--text-light); text-decoration: none; cursor: pointer; }
+
+    /* --- PROFILE MENU --- */
+    .profile-nav {
+        position: relative; cursor: pointer;
+        display: flex; align-items: center;
+        gap: 10px; color: var(--gold); font-weight: bold;
+    }
+    .profile-nav:hover { color: white; }
+
+    /* --- LOCKING LOGIC --- */
+    .restricted-area { position: relative; overflow: hidden; border-radius: 10px; }
+    .blur-container { filter: blur(15px); pointer-events: none; transition: 0.8s; user-select: none; }
+    body.is-logged-in .blur-container { filter: blur(0); pointer-events: auto; user-select: auto; }
+    .access-overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
+        justify-content: center; align-items: center; z-index: 50;
+        transition: 0.5s; text-align: center; padding: 20px;
+    }
+    body.is-logged-in .access-overlay { opacity: 0; pointer-events: none; }
+
+    /* --- MAIN WEBSITE --- */
+    header { 
+        background: rgba(61, 43, 31, 0.95); padding: 1rem 5%; 
+        position: fixed; width: 100%; top: 0; z-index: 1000; 
+        display: flex; justify-content: space-between; align-items: center; 
+        border-bottom: 2px solid var(--primary); backdrop-filter: blur(10px);
+    }
+    .logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 15px; }
+    .logo img { height: 40px; border-radius: 5px; background: white; padding: 2px; }
+    nav ul { display: flex; gap: 1.5rem; list-style: none; align-items: center; }
+    nav a { color: white; cursor: pointer; text-decoration: none; font-size: 0.9rem; transition: 0.3s; }
+    nav a:hover { color: var(--primary); }
+
+    .hero { 
+        height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; 
+        background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.8)), url('https://i.pinimg.com/736x/11/0f/5d/110f5d47ca85c18b05af08e6504fd505.jpg'); 
+        background-size: cover; background-attachment: fixed;
+        border-bottom: 3px solid var(--separator);
+    }
+    .hero h1 { font-size: 4rem; color: var(--gold); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 5px; }
+    section { padding: 5rem 10%; border-bottom: 3px solid var(--separator); }
+    h2 { font-size: 2.5rem; color: var(--white); text-align: center; margin-bottom: 3rem; }
+    h2::after { content: ''; display: block; width: 60px; height: 4px; background: var(--secondary); margin: 10px auto 0; }
+    .btn { padding: 0.8rem 1.5rem; background: var(--primary); color: var(--dark-bg); font-weight: bold; border-radius: 5px; cursor: pointer; border: none; display: inline-block; text-decoration: none; transition: 0.3s; }
+    .btn:hover { background: var(--secondary); color: white; transform: translateY(-3px); }
+    .btn-small { padding: 0.5rem 1rem; font-size: 0.8rem; margin-top: 10px; }
+    .project-content { background: var(--light-bg); padding: 3rem; border-radius: 15px; border: 1px solid rgba(0,229,255,0.2); }
+    .project-box { display: flex; gap: 2rem; margin-top: 2rem; align-items: center; flex-wrap: wrap; }
+    
+    #values { background:#0b0c10; }
+    .values-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 3rem; text-align: center; }
+    .value-card { padding: 1.5rem; background: var(--gold); border-radius: 8px; transition: 0.3s; color: #000; display: flex; flex-direction: column; align-items: center; justify-content: space-between; height: 100%; }
+    .value-card:hover { transform: translateY(-10px); box-shadow: 0 10px 20px rgba(148, 82, 6, 0.719); }
+    #robot { background: #0b0c10; }
+    .robot-specs { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    .robot-img { width: 100%; border-radius: 10px; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--primary); }
+    .spec-list li { margin-bottom: 1rem; padding-left: 1.5rem; position: relative; list-style: none; }
+    .spec-list li::before { content: '🚀'; position: absolute; left: 0; font-size: 0.8rem; }
+    .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; }
+    
+    /* NEW CSS FOR MEMBER IMAGES */
+    .member-card { background: #222; padding: 2rem; border-radius: 10px; text-align: center; transition: 0.3s; border: 1px solid #333; color: white; }
+    .member-card h3 { color: var(--gold); margin-top: 5px; }
+    .member-card:hover { border-color: var(--primary); background: #2a2a2a; }
+    .member-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%; /* Circle shape */
+        object-fit: cover;
+        border: 3px solid var(--primary);
+        margin-bottom: 15px;
+        background-color: #333;
+    }
+    
+    .role { font-style: italic; color: var(--secondary); margin-bottom: 0.5rem; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
+    footer { background: #000; padding: 3rem 10%; text-align: center; border-top: 1px solid var(--primary); }
+    .socials { margin: 1.5rem 0; display: flex; justify-content: center; gap: 25px; }
+    .socials a { color: var(--primary); font-size: 1.8rem; transition: 0.3s; }
+    .socials a:hover { color: var(--secondary); transform: scale(1.2); }
+    @media (max-width: 768px) { .robot-specs { grid-template-columns: 1fr; } nav { display: none; } .hero h1 { font-size: 2.5rem; } }
+
+</style>
+</head>
+<body>
+
+    <!-- SETTINGS OVERLAY -->
+    <div id="settings-overlay">
+        <div class="box settings-mode">
+            <div class="inner-content"></div>
+            <div class="loginBx">
+                <h2>SETTINGS</h2>
+                
+                <!-- Profile Pic Section -->
+                <div class="settings-pic-wrapper">
+                    <img id="settings-preview-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="settings-profile-preview" title="Click to change photo">
+                    <input type="file" id="upload-profile-pic" accept="image/*">
+                    <p style="color:var(--gold); font-size: 0.7rem;">Click photo to change</p>
+                </div>
+
+                <input type="text" id="update-name" placeholder="Full Name">
+                <input type="email" id="update-email" placeholder="New Email">
+                <input type="password" id="update-pass" placeholder="New Password">
+                
+                <button id="save-settings-btn" class="btn-action">Save Changes</button>
+                <button id="logout-settings-btn" style="background:var(--secondary); color:white;" class="btn-action">Logout Account</button>
+                <p id="close-settings" style="color:white; font-size: 11px; cursor:pointer; margin-top: 10px;">Close Settings</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- VALUE DETAIL PAGES -->
+    <div id="page-discovery" class="value-page">
+        <div class="page-header">
+            <button class="btn-back" onclick="closePage('page-discovery')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            <h1>Discovery</h1>
+        </div>
+        <div class="page-content">
+            <h2>Exploring New Horizons</h2>
+            <p>At Team Canopix, Discovery is about more than just finding facts. It's about developing a mindset of curiosity. We explore new skills in programming, engineering, and research every single day at the PSC Planetarium.</p>
+            <div class="resource-box">
+                <h3>Original Resources</h3>
+                <p>Access our Discovery documentation and research logs here:</p><br>
+                <a href="https://drive.google.com/drive/folders/1CFziSiGdkFrFaXU2VymHIBhYO9b2Rv6X?usp=drive_link" target="_blank" class="btn">View Google Drive Folder</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-innovation" class="value-page">
+        <div class="page-header">
+            <button class="btn-back" onclick="closePage('page-innovation')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            <h1>Innovation</h1>
+        </div>
+        <div class="page-content">
+            <h2>Creative Problem Solving</h2>
+            <p>Innovation is the heart of our Manuscript project. We don't just use technology; we find creative ways to make it serve history. Our AI tool is a testament to our team's creative spirit.</p>
+            <div class="resource-box">
+                <h3>Original Resources</h3>
+                <p>Read our full Innovation Project Document:</p><br>
+                <a href="https://docs.google.com/document/d/18eRNxsc5aZyihCq72wF0HOcYEkpjSl8v/edit?usp=drive_link" target="_blank" class="btn">Open Document</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="page-impact" class="value-page">
+        <div class="page-header">
+            <button class="btn-back" onclick="closePage('page-impact')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            <h1>Impact</h1>
+        </div>
+        <div class="page-content">
+            <h2>Changing the World</h2>
+            <p>We apply what we learn to improve our world. By digitizing manuscripts, we ensure that ancient wisdom is never lost, impacting future generations of historians and students.</p>
+        </div>
+    </div>
+
+    <div id="page-inclusion" class="value-page">
+        <div class="page-header">
+            <button class="btn-back" onclick="closePage('page-inclusion')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            <h1>Inclusion</h1>
+        </div>
+        <div class="page-content">
+            <h2>Respect & Diversity</h2>
+            <p>We respect each other and embrace our differences. At Canopix, every voice matters, whether you are a Robot Maker or a Project Leader. We work better because we work together.</p>
+        </div>
+    </div>
+
+    <div id="page-teamwork" class="value-page">
+        <div class="page-header">
+            <button class="btn-back" onclick="closePage('page-teamwork')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            <h1>Teamwork</h1>
+        </div>
+        <div class="page-content">
+            <h2>Stronger Together</h2>
+            <p>We are more efficient and creative when we work as a team. From solving mission strategies to coding our app, our collaboration is what makes us Canopix.</p>
+            <div class="resource-box">
+                <h3>Original Resources</h3>
+                <p>See our Teamwork gallery and meeting notes:</p><br>
+                <a href="https://drive.google.com/drive/folders/1J7QJu5NcO9U730et4zQGHaRj_ranbtdv?usp=drive_link" target="_blank" class="btn">View Team Folder</a>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <div id="page-fun" class="value-page">
+        <div class="page-header">
+            <button class="btn-back" onclick="closePage('page-fun')"><i class="fa-solid fa-arrow-left"></i> Back to Home</button>
+            <h1>Fun</h1>
+        </div>
+        <div class="page-content">
+            <h2>Enjoying the Journey</h2>
+            <p>FLL 2026 is a competition, but for us, it's also a celebration. We enjoy the process, celebrate our successes, and have a great time learning at the PSC.</p>
+            <div class="resource-box">
+                <h3>Original Resources</h3>
+                <p>Check out our team fun moments:</p><br>
+                <a href="https://drive.google.com/drive/folders/1U2WsIhgO_nXJeTCX47luwjNWg4ed1Xs6?usp=drive_link" target="_blank" class="btn">View Fun Memories</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- AUTH OVERLAY -->
+    <div id="animated-login-wrapper">
+        <div class="box" id="auth-box">
+            <div class="inner-content"></div>
+            <div class="loginBx">
+                <h2 id="form-title">LOGIN</h2>
+                <input type="text" id="reg-name" class="signup-only" placeholder="Full Name">
+                <input type="date" id="reg-dob" class="signup-only">
+                <select id="reg-gender" class="signup-only custom-select">
+                    <option value="" disabled selected>Select Gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="other">company</option>
+                </select>
+                <input type="email" id="email" placeholder="Email" required>
+                
+                <div class="input-group">
+                    <input type="password" id="password" placeholder="Password">
+                    <i class="fa-solid fa-eye toggle-pass" id="eye1"></i>
+                </div>
+
+                <div class="input-group signup-only">
+                    <input type="password" id="password-confirm" placeholder="Confirm Password">
+                    <i class="fa-solid fa-eye toggle-pass" id="eye2"></i>
+                </div>
+
+                <input type="submit" id="auth-btn" value="Sign in">
+                
+                <div class="group-links">
+                    <a id="forgot-btn">Forgot Password</a>
+                    <a id="toggle-auth">Sign up</a>
+                </div>
+                <p id="close-auth" style="color:white; font-size: 10px; cursor:pointer; margin-top: 5px;">Back to Home</p>
+            </div>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo"><img src="canopic jar no bg.png" alt="Logo"> CANOPIX</div>
+        <nav>
+            <ul>
+                <li><a onclick="document.getElementById('project').scrollIntoView()">Innovation</a></li>
+                <li><a onclick="document.getElementById('values').scrollIntoView()">Values</a></li>
+                <li><a onclick="document.getElementById('robot').scrollIntoView()">Robot</a></li>
+                <li><a onclick="document.getElementById('team').scrollIntoView()">Crew</a></li>
+                <li><a href="library.html">Library</a></li>
+                <!-- PROFILE MENU -->
+                <li id="profile-nav-item" style="display:none;">
+                    <div class="profile-nav" onclick="openSettings()">
+                        <img id="nav-profile-img" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" class="profile-img-nav">
+                        <span id="nav-user-name">Profile</span>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1><strong>CANOPIX</strong></h1>
+        <p>Competitors in the FLL 2026 Regionals.<br>We are the dreamers of PSC.</p><br>
+        <button onclick="document.getElementById('project').scrollIntoView()" class="btn">Check our website</button>
+    </section>
+
+    <div id="content-blur-wrapper">
+        
+        <section id="project" class="restricted-area">
+            <div class="access-overlay">
+                <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--primary); margin-bottom: 20px;"></i>
+                <h3 style="color: white; margin-bottom: 15px;">Innovation Content Locked</h3>
+                <button onclick="openLogin()" class="btn">Get Access</button>
+            </div>
+
+            <div class="blur-container">
+                <h2>The Innovation Project</h2>
+                <div class="project-content">
+                    <div class="project-box">
+                        <div style="flex: 1;">
+                            <h3>Problem & Solution</h3>
+                            <p>Our team has resolved the problem of scanning manuscripts by creating an app that scans them and using an AI tool that can identify the text and convert it to digital format.</p>
+                  <!-- Button Container -->
+                  <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 10px; justify-content: center;">
+                  <a href="https://columbus-interinhibitive-janna.ngrok-free.dev" 
+                  class="btn" 
+                  target="_blank" 
+                  rel="noopener noreferrer">
+                  Manuscript AI Consultant
+                 </a>
+                 <a href="#" 
+                 class="btn">
+                 OCR
+                 </a>
+                 <a href="https://drive.google.com/drive/folders/15RP8UkTL6olc9XRxxI9y0fTva0blOolw?usp=drive_link" 
+                 class="btn">
+                 Showcase
+                 </a>
+                     </div>
+                      </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="values">
+            <h2>Core Values</h2>
+            <div class="values-grid">
+                 <div class="value-card reveal-item">
+                    <div><h3>Discovery</h3><p>We explore new skills.</p></div>
+                    <button onclick="openPage('page-discovery')" class="btn btn-small">Learn More</button>
+                 </div>
+                 <div class="value-card reveal-item">
+                    <div><h3>Innovation</h3><p>We use creativity.</p></div>
+                    <button onclick="openPage('page-innovation')" class="btn btn-small">Learn More</button>
+                 </div>
+                 <div class="value-card reveal-item">
+                    <div><h3>Impact</h3><p>We solve problems.</p></div>
+                    <button onclick="openPage('page-impact')" class="btn btn-small">Learn More</button>
+                 </div>
+                 <div class="value-card reveal-item">
+                    <div><h3>Inclusion</h3><p>We Respect each other.</p></div>
+                    <button onclick="openPage('page-inclusion')" class="btn btn-small">Learn More</button>
+                 </div>
+                 <div class="value-card reveal-item">
+                    <div><h3>Teamwork</h3><p>Stronger together.</p></div>
+                    <button onclick="openPage('page-teamwork')" class="btn btn-small">Learn More</button>
+                 </div>
+                 <div class="value-card reveal-item">
+                    <div><h3>Fun</h3><p>Enjoy the process!</p></div>
+                    <button onclick="openPage('page-fun')" class="btn btn-small">Learn More</button>
+                </div>
+                 <div class="value-card reveal-item">
+                    <div><h3>core value GAME</h3><p>we made the best SNAKE GAME about our Journey!</p></div>
+                    <button onclick="window.location.href='snake.html'" class="btn btn-small">TRY IT NOW!</button>
+                </div>
+            </div>
+        </section>
+<!-- Library Section -->
+<section id="library-section" style="text-align:center; padding:4rem 1rem; background-color:#0f0f0f; color:#f0f0f0;">
+    <h2 style="font-size:2.5rem; font-weight:700; margin-bottom:1rem;">
+        📜 World Manuscript Library
+    </h2>
+    <p style="max-width:700px; margin:0 auto 2rem auto; font-weight:300;">
+        Explore our curated collection of 20 historic manuscripts from 12 civilizations
+        spanning over 3,000 years of human history.
+    </p>
+
+    <div class="stats" style="display:flex; justify-content:center; gap:2rem; margin-bottom:2rem;">
+        <div style="text-align:center;">
+            <span style="display:block; font-weight:700; font-size:1.5rem; color:#d4c26f;">58</span>
+            MANUSCRIPTS
+        </div>
+        <div style="text-align:center;">
+            <span style="display:block; font-weight:700; font-size:1.5rem; color:#d4c26f;">13</span>
+            CIVILIZATIONS
+        </div>
+        <div style="text-align:center;">
+            <span style="display:block; font-weight:700; font-size:1.5rem; color:#d4c26f;">1</span>
+            LANGUAGES
+        </div>
+        <!-- <div style="text-align:center;">
+            <span style="display:block; font-weight:700; font-size:1.5rem; color:#d4c26f;">3000+</span>
+            YEARS OF HISTORY
+        </div> -->
+    </div>
+
+    <a href="library.html" 
+       style="display:inline-block; background-color:#d4c26f; color:#000; padding:0.75rem 2rem; border-radius:5px; font-weight:600; text-decoration:none; transition:0.3s;">
+        📖 Open the Library
+    </a>
+</section>
+        <section id="robot">
+            <h2>Meet "The Robot"</h2>
+            <div class="robot-specs">
+                <div><img src="background-removed-20260118_170337-standard.png" alt="Robot" class="robot-img"></div>
+                <div>
+                    <h3>Technical Specifications</h3>
+                    <ul class="spec-list">
+                        <li><strong>Drive Train:</strong> Large Motors for torque.</li>
+                        <li><strong>Sensors:</strong> Color & Gyro sensors.</li>
+                        <li><strong>Attachments:</strong> Modular passive arms.</li>
+                        <li><strong>Strategy:</strong> Fast, four-run strategy.</li>
+                    </ul>
+                    
+                    <div class="restricted-area" style="margin-top: 20px;">
+                        <div class="access-overlay" style="border-radius: 10px;">
+                            <p style="color:white; font-size: 0.8rem; margin-bottom: 5px;"><i class="fa-solid fa-lock"></i> Locked</p>
+                            <button onclick="openLogin()" class="btn btn-small" style="font-size: 0.7rem; padding: 5px 10px;">Login to Unlock Resources</button>
+                        </div>
+                        
+                        <div class="blur-container" style="display: flex; gap: 10px; flex-wrap: wrap; padding: 10px 0;">
+                            <a href="https://drive.google.com/drive/folders/110I4yMLPusIHpWOBYpNmgApBtSLgTruS?usp=drive_link" class="btn btn-small">Previous Robots</a>
+                            <a href="https://drive.google.com/drive/folders/1xnlHOGQMJDf46X4h5tgHnI8OdVkQSfga?usp=drive_link" class="btn btn-small">Attachments</a>
+                            <a href="https://drive.google.com/file/d/1-hCw7YSFV4ynjc1LfaOxjdEs8Kbr84um/view?usp=drive_link" class="btn btn-small">Missions Strategies</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="team">
+            <h2>The Crew</h2>
+            <div class="team-grid">
+                <!-- IMPORTANT: Replace src="yamen.jpg" with your actual image file name -->
+                <div class="member-card reveal-item">
+                    <img src="3.png" alt="Yamen" class="member-img">
+                    <div class="role">Team Leader</div>
+                    <h3>Yamen</h3>
+                    <p>"I ensure the robotics team and the project meet all deadlines."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="1.png" alt="Hagar" class="member-img">
+                    <div class="role">Project Leader</div>
+                    <h3>Hagar</h3>
+                    <p>"I make sure that the project will be perfect."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="8.png" alt="Merna" class="member-img">
+                    <div class="role">Robot Leader</div>
+                    <h3>Merna</h3>
+                    <p>"I design the most handsome robot."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="5.png" alt="Yomna" class="member-img">
+                    <div class="role">Maker of Attachments</div>
+                    <h3>Yomna</h3>
+                    <p>"I make the attachments for our robot."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="7.png" alt="Marie" class="member-img">
+                    <div class="role">Robot Maker</div>
+                    <h3>Marie</h3>
+                    <p>"I make our robot."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <div class="role">Project Maker</div>
+                    <h3>Malak</h3>
+                    <p>"I invent ideas for our project."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="Ali.jpg.jpeg" alt="Ali" class="member-img">
+                    <div class="role">Project Maker</div>
+                    <h3>Ali</h3>
+                    <p>"I research for the best ideas."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="6.png" alt="Moaaz" class="member-img">
+                    <div class="role">Robot Maker</div>
+                    <h3>Moaaz</h3>
+                    <p>"I make the design of our robot."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="2.png" alt="Mina" class="member-img">
+                    <div class="role">Robot Maker</div>
+                    <h3>Mina</h3>
+                    <p>"I make sure attachments are perfect."</p>
+                </div>
+
+                <div class="member-card reveal-item">
+                    <img src="4.png" alt="Kiro" class="member-img">
+                    <div class="role">Project Maker</div>
+                    <h3>Kiro</h3>
+                    <p>"I have made the best website ever."</p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <h3>Contact Us</h3>
+            <p>Email: canopix26@gmail.com</p>
+            <div class="socials">
+                <a href="https://www.facebook.com/share/1BhwSGYkRF/?mibextid=wwXIfr"><i class="fa-brands fa-facebook"></i></a>
+                <a href="https://www.tiktok.com/@canopix8"><i class="fa-brands fa-tiktok"></i></a>
+                <a href="https://www.instagram.com/canopix__"><i class="fa-brands fa-instagram"></i></a>
+                 <a href="https://github.com/CANOPIX26"><i class="fa-brands fa-github"></i></a>
+            </div>
+            <small>&copy; 2026 Team Canopix | PSC Planetarium</small>
+        </footer>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, sendPasswordResetEmail, updateEmail, updatePassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyBhTJ88rN4Lj4fGogNCjUbJQke-7QiRbeo",
+    authDomain: "canopix2026-83ceb.firebaseapp.com",
+    projectId: "canopix2026-83ceb",
+    storageBucket: "canopix2026-83ceb.firebasestorage.app",
+    messagingSenderId: "646414631175",
+    appId: "1:646414631175:web:af5a68adba29bbf4d085a2",
+    measurementId: "G-66W234047H"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const wrapper = document.getElementById('animated-login-wrapper');
+    const settingsOverlay = document.getElementById('settings-overlay');
+    const authBtn = document.getElementById('auth-btn');
+    const toggleBtn = document.getElementById('toggle-auth');
+    
+    // Profile Pic Elements
+    const profileUploadInput = document.getElementById('upload-profile-pic');
+    const settingsPreviewImg = document.getElementById('settings-preview-img');
+    const navProfileImg = document.getElementById('nav-profile-img');
+    let base64Image = "";
+
+    let isLogin = true;
+
+    // Handle Profile Pic Preview before saving
+    settingsPreviewImg.onclick = () => profileUploadInput.click();
+    profileUploadInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                base64Image = event.target.result;
+                settingsPreviewImg.src = base64Image;
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    // AUTH STATE CHANGE
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            document.body.classList.add('is-logged-in');
+            wrapper.style.display = 'none';
+            document.getElementById('profile-nav-item').style.display = 'block';
+            
+            const userDoc = await getDoc(doc(db, "users", user.uid));
+            if(userDoc.exists()) {
+                const data = userDoc.data();
+                document.getElementById('nav-user-name').innerText = data.name.split(' ')[0];
+                document.getElementById('update-name').value = data.name;
+                document.getElementById('update-email').value = user.email;
+                if(data.profilePic) {
+                    navProfileImg.src = data.profilePic;
+                    settingsPreviewImg.src = data.profilePic;
+                }
+            }
+        } else {
+            document.body.classList.remove('is-logged-in');
+            document.getElementById('profile-nav-item').style.display = 'none';
+            settingsOverlay.style.display = 'none';
+        }
+    });
+
+    // LOGIN / REGISTER
+    authBtn.onclick = async () => {
+        const email = document.getElementById('email').value;
+        const pass = document.getElementById('password').value;
+        try {
+            if (isLogin) {
+                if (!email || !pass) return alert("Please fill in all fields");
+                await signInWithEmailAndPassword(auth, email, pass);
+            } else {
+                const fullName = document.getElementById('reg-name').value;
+                const dob = document.getElementById('reg-dob').value;
+                const gender = document.getElementById('reg-gender').value;
+                const confirm = document.getElementById('password-confirm').value;
+                if (!fullName || !dob || !gender) return alert("Please fill in all details");
+                if (pass !== confirm) return alert("Passwords match error!");
+                const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                await setDoc(doc(db, "users", userCredential.user.uid), {
+                    name: fullName, birthday: dob, gender: gender, email: email, role: "member", profilePic: ""
+                });
+                alert("Success! Welcome to Team Canopix.");
+            }
+        } catch (err) { alert(err.message); }
+    };
+
+    // SETTINGS LOGIC
+    document.getElementById('save-settings-btn').onclick = async () => {
+        const user = auth.currentUser;
+        const newName = document.getElementById('update-name').value;
+        const newEmail = document.getElementById('update-email').value;
+        const newPass = document.getElementById('update-pass').value;
+
+        try {
+            let updateData = {};
+            if (newName) updateData.name = newName;
+            if (base64Image) {
+                updateData.profilePic = base64Image;
+                navProfileImg.src = base64Image; // Immediate UI update
+            }
+
+            if(Object.keys(updateData).length > 0) {
+                await updateDoc(doc(db, "users", user.uid), updateData);
+            }
+
+            if (newEmail && newEmail !== user.email) {
+                await updateEmail(user, newEmail);
+                await updateDoc(doc(db, "users", user.uid), { email: newEmail });
+            }
+            if (newPass) await updatePassword(user, newPass);
+            
+            alert("Profile updated successfully!");
+            settingsOverlay.style.display = 'none';
+        } catch (err) {
+            alert("Error: " + err.message);
+        }
+    };
+
+    // UI CONTROLS
+    window.openLogin = () => { wrapper.style.display = 'flex'; };
+    window.openSettings = () => { settingsOverlay.style.display = 'flex'; };
+    document.getElementById('close-auth').onclick = () => { wrapper.style.display = 'none'; };
+    document.getElementById('close-settings').onclick = () => { settingsOverlay.style.display = 'none'; };
+    document.getElementById('logout-settings-btn').onclick = () => signOut(auth);
+
+    toggleBtn.onclick = () => {
+        isLogin = !isLogin;
+        document.getElementById('auth-box').classList.toggle('signup-mode');
+        document.getElementById('form-title').innerText = isLogin ? "LOGIN" : "CREATE ACCOUNT";
+        authBtn.value = isLogin ? "Sign in" : "Register";
+        toggleBtn.innerText = isLogin ? "Sign up" : "Back to Login";
+        document.querySelectorAll('.signup-only').forEach(f => f.style.display = isLogin ? 'none' : 'block');
+    };
+
+    const setupEye = (eyeId, inputId) => {
+        document.getElementById(eyeId).onclick = function() {
+            const input = document.getElementById(inputId);
+            input.type = input.type === "password" ? "text" : "password";
+            this.classList.toggle('fa-eye'); 
+            this.classList.toggle('fa-eye-slash');
+        };
+    };
+    setupEye('eye1', 'password'); 
+    setupEye('eye2', 'password-confirm');
+
+    document.getElementById('forgot-btn').onclick = () => {
+        const email = document.getElementById('email').value;
+        if(!email) return alert("Enter email first");
+        sendPasswordResetEmail(auth, email).then(() => alert("Reset link sent!"));
+    };
+
+    // DETAIL PAGES
+    window.openPage = (pageId) => {
+        document.getElementById(pageId).style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    };
+    window.closePage = (pageId) => {
+        document.getElementById(pageId).style.display = 'none';
+        document.body.style.overflow = 'auto';
+    };
+
+    // SCROLL ANIMATIONS
+    const observerOptions = { threshold: 0.15 };
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+                const items = entry.target.querySelectorAll('.reveal-item');
+                items.forEach((item, index) => {
+                    item.style.animationDelay = `${index * 0.15}s`;
+                    item.classList.add('animated');
+                });
+                observer.unobserve(entry.target);
+            }
+        });
+    }, observerOptions);
+
+    observer.observe(document.querySelector('.values-grid'));
+    observer.observe(document.querySelector('.team-grid'));
+
+</script>
+</body>
+</html>
